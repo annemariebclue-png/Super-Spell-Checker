@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tooth-tastic Spell Checker - Grade 2 Spelling Adventure</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka & Quicksand -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#3B82F6',
+                            purple: '#8B5CF6',
+                            yellow: '#F59E0B',
+                            pink: '#EC4899',
+                            teal: '#14B8A6',
+                            green: '#10B981',
+                            red: '#EF4444',
+                        }
+                    },
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        quicksand: ['Quicksand', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #f0fdf4 50%, #fef3c7 100%);
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        .heading-font {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        /* Pulse and glow animations for status lights */
+        .light-indicator {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-block;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .light-off {
+            background-color: #6B7280;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+            opacity: 0.4;
+        }
+
+        .light-green-on {
+            background-color: #10B981;
+            box-shadow: 0 0 18px #10B981, 0 0 30px #34D399, inset 0 2px 4px rgba(255,255,255,0.8);
+            animation: pulse-green 1.2s infinite alternate;
+        }
+
+        .light-red-on {
+            background-color: #EF4444;
+            box-shadow: 0 0 18px #EF4444, 0 0 30px #F87171, inset 0 2px 4px rgba(255,255,255,0.8);
+            animation: pulse-red 1.2s infinite alternate;
+        }
+
+        @keyframes pulse-green {
+            0% { transform: scale(1); box-shadow: 0 0 12px #10B981; }
+            100% { transform: scale(1.15); box-shadow: 0 0 24px #10B981, 0 0 35px #34D399; }
+        }
+
+        @keyframes pulse-red {
+            0% { transform: scale(1); box-shadow: 0 0 12px #EF4444; }
+            100% { transform: scale(1.15); box-shadow: 0 0 24px #EF4444, 0 0 35px #F87171; }
+        }
+
+        /* Shake animation for incorrect spelling */
+        .shake-animation {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+            40%, 60% { transform: translate3d(8px, 0, 0); }
+        }
+
+        /* Celebrate bounce animation */
+        .bounce-celebrate {
+            animation: bounce 0.6s infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-12px); }
+        }
+
+        /* Custom scrollbar for sandbox */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F3F4F6;
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #9CA3AF;
+            border-radius: 8px;
+        }
+
+        /* Confetti canvas overlay */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen text-gray-800 pb-10">
+
+    <!-- Confetti Overlay Canvas -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Top Navigation Header -->
+    <header class="bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b-4 border-teal-400 shadow-md">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <!-- App Logo / Title -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchMode('challenge')">
+                <div class="w-12 h-12 bg-teal-400 rounded-2xl flex items-center justify-center text-white shadow-lg transform hover:rotate-6 transition-transform">
+                    <i class="fa-solid fa-tooth text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="heading-font text-xl md:text-2xl font-bold text-teal-600 leading-tight">Super Spell Checker</h1>
+                    <p class="text-xs font-semibold text-gray-500">Grade 2 Teeth & Health Words 🦷</p>
+                </div>
+            </div>
+
+            <!-- Global Controls & Score Display -->
+            <div class="flex items-center gap-2 md:gap-4 flex-wrap">
+                <!-- Stars Counter -->
+                <div class="flex items-center gap-1.5 bg-amber-100 border-2 border-amber-300 px-3 py-1.5 rounded-full shadow-sm">
+                    <i class="fa-solid fa-star text-amber-500 text-lg animate-spin" style="animation-duration: 8s;"></i>
+                    <span id="global-stars" class="heading-font font-bold text-amber-700 text-lg">0</span>
+                </div>
+
+                <!-- Speech Speed Toggle -->
+                <button id="speed-btn" onclick="toggleSpeechSpeed()" class="flex items-center gap-1 bg-sky-100 hover:bg-sky-200 border-2 border-sky-300 text-sky-700 px-3 py-1.5 rounded-full text-xs font-bold transition">
+                    <i class="fa-solid fa-[#0] fa-gauge-high"></i>
+                    <span id="speed-text">Normal Voice</span>
+                </button>
+
+                <!-- Mute / Unmute Audio Toggle -->
+                <button id="sound-toggle-btn" onclick="toggleSound()" class="w-10 h-10 bg-gray-100 hover:bg-gray-200 border-2 border-gray-300 text-gray-700 rounded-full flex items-center justify-center text-lg transition">
+                    <i id="sound-icon" class="fa-solid fa-volume-high text-teal-600"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="max-w-5xl mx-auto px-4 mt-1 flex gap-2 border-t border-gray-100 pt-2 pb-1 overflow-x-auto">
+            <button id="tab-challenge" onclick="switchMode('challenge')" class="flex-1 min-w-[140px] py-2 px-3 rounded-xl font-bold heading-font text-sm md:text-base flex items-center justify-center gap-2 bg-teal-500 text-white shadow-md transition">
+                <i class="fa-solid fa-gamepad"></i> Spelling Bee
+            </button>
+            <button id="tab-sandbox" onclick="switchMode('sandbox')" class="flex-1 min-w-[140px] py-2 px-3 rounded-xl font-bold heading-font text-sm md:text-base flex items-center justify-center gap-2 bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Live Sandbox
+            </button>
+            <button id="tab-cards" onclick="switchMode('cards')" class="flex-1 min-w-[140px] py-2 px-3 rounded-xl font-bold heading-font text-sm md:text-base flex items-center justify-center gap-2 bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
+                <i class="fa-solid fa-book-open"></i> Word Cards
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-6 flex-grow w-full">
+
+        <!-- ================= MODE 1: SPELLING BEE CHALLENGE MODE ================= -->
+        <section id="mode-challenge" class="block">
+            <!-- Progress Bar Card -->
+            <div class="bg-white rounded-2xl p-4 mb-6 shadow-sm border-2 border-teal-100 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <!-- Mascot Thumbnail -->
+                    <div id="mascot-avatar" class="w-14 h-14 bg-teal-100 rounded-full flex items-center justify-center text-teal-500 border-2 border-teal-300 text-2xl flex-shrink-0">
+                        🦷
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="heading-font text-xs font-bold uppercase tracking-wider text-teal-600 bg-teal-100 px-2 py-0.5 rounded-md">Question</span>
+                            <span id="question-tracker" class="heading-font font-bold text-gray-700">Word 1 of 11</span>
+                        </div>
+                        <p id="mascot-speech" class="text-xs md:text-sm text-gray-600 font-semibold mt-0.5">"Listen carefully and type the matching word!"</p>
+                    </div>
+                </div>
+
+                <!-- Step Progress Bar -->
+                <div class="w-full md:w-64 bg-gray-200 rounded-full h-4 overflow-hidden border border-gray-300">
+                    <div id="challenge-progress-bar" class="bg-gradient-to-r from-teal-400 to-emerald-400 h-full rounded-full transition-all duration-500" style="width: 9%"></div>
+                </div>
+            </div>
+
+            <!-- Main Interactive Spelling Card -->
+            <div id="spelling-card" class="bg-white rounded-3xl p-6 md:p-8 shadow-xl border-4 border-teal-200 transition-all duration-300 relative overflow-hidden">
+                
+                <!-- LIGHT INDICATOR BAR (GREEN & RED STATUS LIGHTS) -->
+                <div class="bg-slate-800 rounded-2xl p-3 mb-6 flex items-center justify-between shadow-inner">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-gray-300 uppercase tracking-wider heading-font mr-1">SPELL CHECK LIGHTS:</span>
+                        <!-- Green Light -->
+                        <div class="flex items-center gap-1.5 bg-slate-900/80 px-3 py-1 rounded-full border border-slate-700">
+                            <div id="light-green" class="light-indicator light-off"></div>
+                            <span class="text-xs font-bold text-emerald-400 heading-font">CORRECT</span>
+                        </div>
+                        <!-- Red Light -->
+                        <div class="flex items-center gap-1.5 bg-slate-900/80 px-3 py-1 rounded-full border border-slate-700">
+                            <div id="light-red" class="light-indicator light-off"></div>
+                            <span class="text-xs font-bold text-rose-400 heading-font">RETRY</span>
+                        </div>
+                    </div>
+                    <!-- Status Label -->
+                    <span id="light-status-text" class="text-xs md:text-sm font-bold text-yellow-300 heading-font hidden md:inline">READY TO CHECK</span>
+                </div>
+
+                <!-- AUDIO PROMPT BUTTON SECTION -->
+                <div class="text-center mb-6">
+                    <p class="text-xs font-bold uppercase text-gray-400 tracking-widest mb-2">Step 1: Listen to the word</p>
+                    <div class="flex items-center justify-center gap-3">
+                        <button onclick="playCurrentWordAudio()" class="bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold text-lg px-6 py-4 rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0 transition flex items-center gap-3 border-b-4 border-teal-700">
+                            <i class="fa-solid fa-volume-high text-2xl animate-pulse"></i>
+                            <span class="heading-font">LISTEN TO WORD</span>
+                        </button>
+
+                        <button onclick="playCurrentWordAudio(true)" title="Listen extra slow" class="bg-sky-100 hover:bg-sky-200 text-sky-700 font-bold px-4 py-4 rounded-2xl border-2 border-sky-300 shadow-sm transition flex items-center gap-2">
+                            <i class="fa-solid fa-turtle text-xl"></i>
+                            <span class="text-xs heading-font hidden sm:inline">SLOW</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- WRITTEN PROMPT / CLUE CARD -->
+                <div class="bg-amber-50/80 border-2 border-amber-200 rounded-2xl p-4 mb-6">
+                    <div class="flex items-start gap-3">
+                        <div class="bg-amber-400 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold flex-shrink-0 mt-0.5 shadow-sm">
+                            <i class="fa-solid fa-lightbulb"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-amber-800 uppercase tracking-wide heading-font">Word Meaning & Clue:</p>
+                            <p id="clue-definition" class="text-gray-800 font-medium text-base md:text-lg mt-0.5">Loading word clue...</p>
+                            <p id="clue-sentence" class="text-sm text-gray-600 italic mt-2 border-t border-amber-200/60 pt-2">"Loading example sentence..."</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TEXT INPUT BOX & SUBMIT BUTTON -->
+                <div class="space-y-4">
+                    <div class="relative">
+                        <label for="spelling-input" class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Step 2: Type your answer below</label>
+                        <input type="text" id="spelling-input" autocomplete="off" spellcheck="false" placeholder="Type word here..." 
+                               class="w-full text-center heading-font text-2xl md:text-3xl py-4 px-4 rounded-2xl border-4 border-gray-300 focus:border-teal-400 focus:outline-none transition-all shadow-inner tracking-wide uppercase"
+                               onkeydown="if(event.key==='Enter') checkSpellingAnswer()">
+                        <!-- Dynamic Status Icon Inside Input -->
+                        <div id="input-status-icon" class="absolute right-4 top-10 text-2xl hidden"></div>
+                    </div>
+
+                    <!-- Action Buttons Row -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                        <button onclick="checkSpellingAnswer()" class="sm:col-span-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xl py-3.5 px-6 rounded-2xl shadow-lg border-b-4 border-amber-700 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-check-circle text-2xl"></i>
+                            <span class="heading-font">CHECK SPELLING!</span>
+                        </button>
+
+                        <button onclick="toggleHint()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold border-2 border-indigo-200 py-3.5 px-4 rounded-2xl transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-eye"></i>
+                            <span class="heading-font text-sm">NEED HINT</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- HINT REVEAL BOX (Hidden by default) -->
+                <div id="hint-box" class="hidden mt-4 p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl text-center">
+                    <p class="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-1">Syllables & Letters Hint:</p>
+                    <p id="hint-syllables" class="heading-font text-xl text-indigo-900 tracking-widest font-bold">---</p>
+                    <p id="hint-first-last" class="text-xs text-indigo-700 font-semibold mt-1">First letter: - | Last letter: -</p>
+                </div>
+
+                <!-- FEEDBACK DISPLAY BANNER (Shows Result) -->
+                <div id="feedback-banner" class="hidden mt-6 p-4 rounded-2xl text-center transition-all duration-300">
+                    <div class="flex items-center justify-center gap-3">
+                        <span id="feedback-emoji" class="text-3xl"></span>
+                        <div class="text-left">
+                            <h3 id="feedback-title" class="heading-font text-lg font-bold"></h3>
+                            <p id="feedback-message" class="text-sm font-medium"></p>
+                        </div>
+                    </div>
+                    <div id="next-button-container" class="mt-4 hidden">
+                        <button onclick="nextWord()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-6 py-2.5 rounded-xl shadow transition heading-font text-base inline-flex items-center gap-2">
+                            Next Word <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Quick Controls -->
+            <div class="mt-6 flex justify-between items-center px-2">
+                <button onclick="restartChallenge()" class="text-xs font-bold text-gray-500 hover:text-gray-700 flex items-center gap-1 bg-white/70 px-3 py-1.5 rounded-lg border border-gray-200 transition">
+                    <i class="fa-solid fa-rotate-left"></i> Restart Challenge
+                </button>
+                <div class="flex gap-2">
+                    <button onclick="prevWord()" class="text-xs font-bold text-teal-700 hover:bg-teal-100 bg-white px-3 py-1.5 rounded-lg border border-teal-200 transition">
+                        <i class="fa-solid fa-chevron-left"></i> Previous
+                    </button>
+                    <button onclick="skipWord()" class="text-xs font-bold text-teal-700 hover:bg-teal-100 bg-white px-3 py-1.5 rounded-lg border border-teal-200 transition">
+                        Skip Word <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= MODE 2: LIVE SPELL CHECK SANDBOX ================= -->
+        <section id="mode-sandbox" class="hidden">
+            <div class="bg-white rounded-3xl p-6 md:p-8 shadow-xl border-4 border-indigo-200">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-indigo-500 text-white rounded-xl flex items-center justify-center text-xl shadow">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </div>
+                    <div>
+                        <h2 class="heading-font text-xl md:text-2xl font-bold text-indigo-900">Live Spell Check Sandbox</h2>
+                        <p class="text-xs text-gray-500 font-semibold">Write words or full sentences! Watch the target words light up GREEN when spelled correctly!</p>
+                    </div>
+                </div>
+
+                <!-- Interactive Sandbox Input Box -->
+                <div class="relative mb-6">
+                    <textarea id="sandbox-textarea" rows="4" 
+                              placeholder="Type sentences here using your spelling words... e.g. I use my canine teeth to bite my food!" 
+                              oninput="analyzeSandboxText()"
+                              class="w-full text-lg p-4 rounded-2xl border-4 border-indigo-200 focus:border-indigo-400 focus:outline-none transition shadow-inner font-medium text-gray-800 leading-relaxed"></textarea>
+                    
+                    <div class="flex justify-between items-center mt-2 px-1">
+                        <span id="sandbox-word-count" class="text-xs font-bold text-gray-400">Words typed: 0</span>
+                        <button onclick="clearSandboxText()" class="text-xs font-bold text-rose-500 hover:text-rose-700 bg-rose-50 px-3 py-1 rounded-lg border border-rose-200 transition">
+                            <i class="fa-solid fa-trash-can"></i> Clear Text
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Target Word Grid Lights Checklist -->
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="heading-font font-bold text-gray-700 text-sm md:text-base flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-indigo-500"></i> Target Words Tracker (11 Words):
+                        </h3>
+                        <span class="text-xs font-semibold text-gray-500">🟢 Green = Spelled Right | 🔴 Red = Mistyped</span>
+                    </div>
+
+                    <div id="sandbox-word-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        <!-- Populated dynamically by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Sentence Sample Helper -->
+                <div class="mt-6 bg-slate-50 border-2 border-slate-200 rounded-2xl p-4">
+                    <h4 class="heading-font text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">💡 Try copying or typing these fun practice sentences:</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="insertSampleText('Permanent teeth are meant to last a lifetime.')" class="text-xs bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 py-1.5 px-3 rounded-lg font-medium transition text-left">
+                            "Permanent teeth are meant to last..."
+                        </button>
+                        <button onclick="insertSampleText('Use your incisor and molar teeth to chew food for digestion.')" class="text-xs bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 py-1.5 px-3 rounded-lg font-medium transition text-left">
+                            "Use your incisor and molar..."
+                        </button>
+                        <button onclick="insertSampleText('I can bite and chew with my canine teeth.')" class="text-xs bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 py-1.5 px-3 rounded-lg font-medium transition text-left">
+                            "I can bite and chew..."
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= MODE 3: FLASHCARDS & PRONUNCIATION ================= -->
+        <section id="mode-cards" class="hidden">
+            <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h2 class="heading-font text-2xl font-bold text-purple-900">Spelling Word Cards</h2>
+                    <p class="text-xs text-gray-500 font-semibold">Click the speaker buttons to hear clear pronunciations and learn syllables!</p>
+                </div>
+                <!-- Search filter -->
+                <div class="relative w-full sm:w-64">
+                    <input type="text" id="card-search-input" oninput="filterFlashcards()" placeholder="Search word..." class="w-full text-sm pl-9 pr-4 py-2 rounded-xl border-2 border-purple-200 focus:border-purple-400 focus:outline-none">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-purple-400 text-sm"></i>
+                </div>
+            </div>
+
+            <!-- Flashcards Grid Container -->
+            <div id="flashcards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Dynamic cards populated via JavaScript -->
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // 11 Target Spelling Words Dataset
+        const SPELLING_WORDS = [
+            {
+                word: "permanent",
+                syllables: "per • ma • nent",
+                definition: "Lasting for a very long time or forever!",
+                sentence: "Your adult teeth are permanent, so keep them clean!",
+                category: "Teeth",
+                difficulty: "Long"
+            },
+            {
+                word: "temporary",
+                syllables: "tem • po • rar • y",
+                definition: "Lasting for only a short time.",
+                sentence: "Baby teeth are temporary and will fall out as you grow.",
+                category: "Teeth",
+                difficulty: "Long"
+            },
+            {
+                word: "canine",
+                syllables: "ca • nine",
+                definition: "A pointy tooth used for tearing food, like a dog's tooth!",
+                sentence: "You have four sharp canine teeth.",
+                category: "Teeth",
+                difficulty: "Medium"
+            },
+            {
+                word: "correction",
+                syllables: "cor • rec • tion",
+                definition: "Fixing a mistake to make something right.",
+                sentence: "I made a correction on my spelling test to get 100%!",
+                category: "Learning",
+                difficulty: "Long"
+            },
+            {
+                word: "molar",
+                syllables: "mo • lar",
+                definition: "A large, flat back tooth used for grinding food.",
+                sentence: "Your molar grinds up crunchy crackers into soft bites.",
+                category: "Teeth",
+                difficulty: "Medium"
+            },
+            {
+                word: "incisor",
+                syllables: "in • ci • sor",
+                definition: "A sharp front tooth used for cutting into food.",
+                sentence: "Use your front incisor tooth to take a bite of apple.",
+                category: "Teeth",
+                difficulty: "Medium"
+            },
+            {
+                word: "bite",
+                syllables: "bite",
+                definition: "To cut or grip food with your teeth.",
+                sentence: "Take a big bite of the juicy red strawberry!",
+                category: "Action",
+                difficulty: "Short"
+            },
+            {
+                word: "chew",
+                syllables: "chew",
+                definition: "To crush food with your teeth before swallowing.",
+                sentence: "Chew your food slowly and carefully.",
+                category: "Action",
+                difficulty: "Short"
+            },
+            {
+                word: "shovel",
+                syllables: "shov • el",
+                definition: "A tool with a scoop shape (just like incisor teeth) or used to dig.",
+                sentence: "Front incisor teeth look like a tiny shovel!",
+                category: "Health",
+                difficulty: "Medium"
+            },
+            {
+                word: "teeth",
+                syllables: "teeth",
+                definition: "The hard white structures in your mouth used for eating.",
+                sentence: "Brush your teeth twice a day with toothpaste!",
+                category: "Teeth",
+                difficulty: "Short"
+            },
+            {
+                word: "digestion",
+                syllables: "di • ges • tion",
+                definition: "How your body breaks down food to give you energy.",
+                sentence: "Chewing well is the first step of healthy digestion!",
+                category: "Body",
+                difficulty: "Long"
+            }
+        ];
+
+        let state = {
+            currentIndex: 0,
+            stars: 0,
+            soundEnabled: true,
+            speechRate: 0.85, // Friendly slow rate for Grade 2 learners
+            currentMode: 'challenge', // 'challenge', 'sandbox', 'cards'
+            masteredWords: new Set(),
+            hintRevealed: false
+        };
+
+        // Web Audio API Synthesizer Context
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        // Play sound synthesizer tones
+        function playSoundEffect(type) {
+            if (!state.soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                const now = ctx.currentTime;
+
+                if (type === 'correct') {
+                    // Happy arpeggio chime (C5 -> E5 -> G5 -> C6)
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, i) => {
+                        const noteOsc = ctx.createOscillator();
+                        const noteGain = ctx.createGain();
+                        noteOsc.type = 'triangle';
+                        noteOsc.frequency.setValueAtTime(freq, now + i * 0.08);
+                        
+                        noteGain.gain.setValueAtTime(0.2, now + i * 0.08);
+                        noteGain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.3);
+
+                        noteOsc.connect(noteGain);
+                        noteGain.connect(ctx.destination);
+
+                        noteOsc.start(now + i * 0.08);
+                        noteOsc.stop(now + i * 0.08 + 0.3);
+                    });
+                } else if (type === 'retry') {
+                    // Gentle warm retry tone (E4 -> C4 glide, soft for kids)
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(329.63, now);
+                    osc.frequency.exponentialRampToValueAtTime(261.63, now + 0.25);
+
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'click') {
+                    // Soft pop button sound
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(200, now + 0.05);
+
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'fanfare') {
+                    // Victory fanfare sequence
+                    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+                    notes.forEach((freq, i) => {
+                        const noteOsc = ctx.createOscillator();
+                        const noteGain = ctx.createGain();
+                        noteOsc.type = 'sine';
+                        noteOsc.frequency.setValueAtTime(freq, now + i * 0.12);
+                        
+                        noteGain.gain.setValueAtTime(0.25, now + i * 0.12);
+                        noteGain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.4);
+
+                        noteOsc.connect(noteGain);
+                        noteGain.connect(ctx.destination);
+
+                        noteOsc.start(now + i * 0.12);
+                        noteOsc.stop(now + i * 0.12 + 0.4);
+                    });
+                }
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+        function speakText(text, isSlow = false, callback = null) {
+            if (!state.soundEnabled) {
+                if (callback) callback();
+                return;
+            }
+
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Stop any ongoing speech
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = isSlow ? 0.6 : state.speechRate;
+                utterance.pitch = 1.1; // Friendly higher pitch for kids
+                utterance.lang = 'en-US';
+
+                utterance.onend = function() {
+                    if (callback) callback();
+                };
+
+                utterance.onerror = function() {
+                    if (callback) callback();
+                };
+
+                window.speechSynthesis.speak(utterance);
+            } else {
+                if (callback) callback();
+            }
+        }
+
+        function playCurrentWordAudio(isSlow = false) {
+            playSoundEffect('click');
+            const currentObj = SPELLING_WORDS[state.currentIndex];
+            speakText(currentObj.word, isSlow);
+            
+            // Visual feedback on mascot
+            updateMascotSpeech(`"Listening to: '${currentObj.word.toUpperCase()}'"`);
+        }
+
+        function switchMode(mode) {
+            playSoundEffect('click');
+            state.currentMode = mode;
+
+            // Hide all mode containers
+            document.getElementById('mode-challenge').classList.add('hidden');
+            document.getElementById('mode-sandbox').classList.add('hidden');
+            document.getElementById('mode-cards').classList.add('hidden');
+
+            // Reset tab styles
+            const tabs = ['challenge', 'sandbox', 'cards'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                btn.className = "flex-1 min-w-[140px] py-2 px-3 rounded-xl font-bold heading-font text-sm md:text-base flex items-center justify-center gap-2 transition bg-gray-100 text-gray-600 hover:bg-gray-200";
+            });
+
+            // Activate selected mode
+            document.getElementById(`mode-${mode}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${mode}`);
+            activeBtn.className = "flex-1 min-w-[140px] py-2 px-3 rounded-xl font-bold heading-font text-sm md:text-base flex items-center justify-center gap-2 transition bg-teal-500 text-white shadow-md";
+
+            if (mode === 'sandbox') {
+                renderSandboxGrid();
+                analyzeSandboxText();
+            } else if (mode === 'cards') {
+                renderFlashcards();
+            }
+        }
+
+        function loadChallengeQuestion() {
+            const wordObj = SPELLING_WORDS[state.currentIndex];
+
+            // Update question counter & progress bar
+            document.getElementById('question-tracker').textContent = `Word ${state.currentIndex + 1} of ${SPELLING_WORDS.length}`;
+            const pct = Math.round(((state.currentIndex + 1) / SPELLING_WORDS.length) * 100);
+            document.getElementById('challenge-progress-bar').style.width = `${pct}%`;
+
+            // Reset Light Status Indicators to neutral off
+            setLightState('neutral');
+
+            // Set Clues
+            document.getElementById('clue-definition').textContent = wordObj.definition;
+            document.getElementById('clue-sentence').textContent = `"${wordObj.sentence}"`;
+
+            // Clear Input
+            const inputEl = document.getElementById('spelling-input');
+            inputEl.value = '';
+            inputEl.className = "w-full text-center heading-font text-2xl md:text-3xl py-4 px-4 rounded-2xl border-4 border-gray-300 focus:border-teal-400 focus:outline-none transition-all shadow-inner tracking-wide uppercase";
+            inputEl.focus();
+
+            // Hide hint box
+            document.getElementById('hint-box').classList.add('hidden');
+            state.hintRevealed = false;
+
+            // Hide feedback banner
+            document.getElementById('feedback-banner').classList.add('hidden');
+            document.getElementById('next-button-container').classList.add('hidden');
+            document.getElementById('input-status-icon').classList.add('hidden');
+
+            // Reset Mascot speech
+            updateMascotSpeech(`"Listen carefully and type the matching word!"`);
+
+            // Automatically pronounce the word on load
+            setTimeout(() => {
+                if (state.currentMode === 'challenge') {
+                    speakText(wordObj.word);
+                }
+            }, 400);
+        }
+
+        function setLightState(status) {
+            const greenLight = document.getElementById('light-green');
+            const redLight = document.getElementById('light-red');
+            const statusText = document.getElementById('light-status-text');
+            const cardEl = document.getElementById('spelling-card');
+
+            // Reset lights
+            greenLight.className = "light-indicator light-off";
+            redLight.className = "light-indicator light-off";
+            cardEl.classList.remove('border-emerald-400', 'border-rose-400', 'bg-emerald-50/20', 'bg-rose-50/20');
+
+            if (status === 'correct') {
+                greenLight.className = "light-indicator light-green-on";
+                statusText.textContent = "SPELLING CORRECT!";
+                statusText.className = "text-xs md:text-sm font-bold text-emerald-400 heading-font animate-pulse";
+                cardEl.classList.add('border-emerald-400', 'bg-emerald-50/20');
+            } else if (status === 'incorrect') {
+                redLight.className = "light-indicator light-red-on";
+                statusText.textContent = "NEEDS CORRECTION";
+                statusText.className = "text-xs md:text-sm font-bold text-rose-400 heading-font animate-pulse";
+                cardEl.classList.add('border-rose-400', 'bg-rose-50/20');
+            } else {
+                statusText.textContent = "READY TO CHECK";
+                statusText.className = "text-xs md:text-sm font-bold text-yellow-300 heading-font";
+            }
+        }
+
+        function checkSpellingAnswer() {
+            const inputEl = document.getElementById('spelling-input');
+            const userAttempt = inputEl.value.trim().toLowerCase();
+            const targetObj = SPELLING_WORDS[state.currentIndex];
+            const targetWord = targetObj.word.toLowerCase();
+
+            const feedbackBanner = document.getElementById('feedback-banner');
+            const feedbackTitle = document.getElementById('feedback-title');
+            const feedbackMsg = document.getElementById('feedback-message');
+            const feedbackEmoji = document.getElementById('feedback-emoji');
+            const inputIcon = document.getElementById('input-status-icon');
+            const cardContainer = document.getElementById('spelling-card');
+
+            if (!userAttempt) {
+                // Empty input check
+                playSoundEffect('retry');
+                speakText("Please type your spelling word first!");
+                updateMascotSpeech(`"Don't forget to type something!"`);
+                inputEl.focus();
+                return;
+            }
+
+            feedbackBanner.classList.remove('hidden');
+
+            if (userAttempt === targetWord) {
+                // ================= CORRECT SPELLING (GREEN LIGHT) =================
+                setLightState('correct');
+                playSoundEffect('correct');
+
+                // Visual input styling
+                inputEl.className = "w-full text-center heading-font text-2xl md:text-3xl py-4 px-4 rounded-2xl border-4 border-emerald-500 bg-emerald-50 text-emerald-900 focus:outline-none transition-all shadow-inner tracking-wide uppercase font-bold";
+                
+                inputIcon.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i>`;
+                inputIcon.classList.remove('hidden');
+
+                // Feedback Banner Green
+                feedbackBanner.className = "mt-6 p-4 rounded-2xl text-center bg-emerald-100 border-2 border-emerald-300 text-emerald-900 transition-all duration-300";
+                feedbackEmoji.textContent = "⭐🥳";
+                feedbackTitle.textContent = "Awesome Job! Spelled Correctly!";
+                feedbackMsg.textContent = `You spelled '${targetObj.word.toUpperCase()}' perfectly!`;
+
+                // Add stars if first time
+                if (!state.masteredWords.has(targetObj.word)) {
+                    state.masteredWords.add(targetObj.word);
+                    state.stars += 10;
+                    document.getElementById('global-stars').textContent = state.stars;
+                }
+
+                // Praise Speech
+                const praisePhrases = [
+                    `Super star! ${targetObj.word} is spelled correctly!`,
+                    `Fantastic job! You got ${targetObj.word} right!`,
+                    `Great spelling! ${targetObj.word} lights up green!`
+                ];
+                const randomPraise = praisePhrases[Math.floor(Math.random() * praisePhrases.length)];
+                speakText(randomPraise);
+
+                updateMascotSpeech(`"Hooray! Green light for ${targetObj.word.toUpperCase()}!"`);
+                
+                // Trigger Confetti
+                triggerConfetti();
+
+                // Show Next Button
+                document.getElementById('next-button-container').classList.remove('hidden');
+
+            } else {
+                // ================= INCORRECT SPELLING (RED LIGHT) =================
+                setLightState('incorrect');
+                playSoundEffect('retry');
+
+                // Apply gentle shake animation
+                cardContainer.classList.remove('shake-animation');
+                void cardContainer.offsetWidth; // trigger reflow
+                cardContainer.classList.add('shake-animation');
+
+                // Visual input styling Red
+                inputEl.className = "w-full text-center heading-font text-2xl md:text-3xl py-4 px-4 rounded-2xl border-4 border-rose-500 bg-rose-50 text-rose-900 focus:outline-none transition-all shadow-inner tracking-wide uppercase font-bold";
+                
+                inputIcon.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-500"></i>`;
+                inputIcon.classList.remove('hidden');
+
+                // Feedback Banner Red
+                feedbackBanner.className = "mt-6 p-4 rounded-2xl text-center bg-rose-100 border-2 border-rose-300 text-rose-900 transition-all duration-300";
+                feedbackEmoji.textContent = "🔴💡";
+                feedbackTitle.textContent = "Almost there! Let's try again.";
+                
+                // Compare letters helper
+                let hintTip = `Remember: ${targetObj.word} has ${targetObj.word.length} letters.`;
+                if (userAttempt.length !== targetObj.word.length) {
+                    hintTip += ` You typed ${userAttempt.length} letters.`;
+                } else if (userAttempt[0] !== targetObj.word[0]) {
+                    hintTip += ` It starts with '${targetObj.word[0].toUpperCase()}'.`;
+                }
+
+                feedbackMsg.textContent = hintTip;
+
+                speakText(`Let's retry! ${targetObj.word} needs a quick correction.`);
+                updateMascotSpeech(`"Red light! Click 'Need Hint' or listen again!"`);
+
+                // Auto-show hint after attempt
+                if (!state.hintRevealed) {
+                    toggleHint();
+                }
+            }
+        }
+
+        function toggleHint() {
+            playSoundEffect('click');
+            const wordObj = SPELLING_WORDS[state.currentIndex];
+            const hintBox = document.getElementById('hint-box');
+            
+            state.hintRevealed = !state.hintRevealed;
+
+            if (state.hintRevealed) {
+                hintBox.classList.remove('hidden');
+                document.getElementById('hint-syllables').textContent = wordObj.syllables.toUpperCase();
+                document.getElementById('hint-first-last').textContent = 
+                    `Starts with '${wordObj.word[0].toUpperCase()}' • Ends with '${wordObj.word[wordObj.word.length - 1].toUpperCase()}' • Length: ${wordObj.word.length} letters`;
+                speakText(`Syllables are: ${wordObj.syllables}`);
+            } else {
+                hintBox.classList.add('hidden');
+            }
+        }
+
+        function updateMascotSpeech(text) {
+            document.getElementById('mascot-speech').textContent = text;
+        }
+
+        function nextWord() {
+            playSoundEffect('click');
+            if (state.currentIndex < SPELLING_WORDS.length - 1) {
+                state.currentIndex++;
+                loadChallengeQuestion();
+            } else {
+                // Game finished screen
+                playSoundEffect('fanfare');
+                triggerConfetti();
+                speakText("Congratulations! You completed all 11 spelling words! You are a Spelling Master!");
+
+                const cardEl = document.getElementById('spelling-card');
+                cardEl.innerHTML = `
+                    <div class="text-center py-8 space-y-4">
+                        <div class="text-6xl animate-bounce">🏆⭐🦷</div>
+                        <h2 class="heading-font text-3xl font-bold text-teal-700">Spelling Bee Champion!</h2>
+                        <p class="text-gray-600 font-medium max-w-md mx-auto">
+                            You mastered all 11 Grade 2 spelling words! Total Stars Earned: <span class="font-bold text-amber-600">${state.stars} Stars</span>
+                        </p>
+                        <div class="pt-4 flex justify-center gap-4">
+                            <button onclick="restartChallenge()" class="bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold px-8 py-3.5 rounded-2xl shadow-lg heading-font text-lg transition">
+                                Play Challenge Again 🔄
+                            </button>
+                            <button onclick="switchMode('sandbox')" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold px-6 py-3.5 rounded-2xl shadow-lg heading-font text-lg transition">
+                                Go to Live Sandbox ✍️
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function prevWord() {
+            playSoundEffect('click');
+            if (state.currentIndex > 0) {
+                state.currentIndex--;
+                loadChallengeQuestion();
+            }
+        }
+
+        function skipWord() {
+            playSoundEffect('click');
+            nextWord();
+        }
+
+        function restartChallenge() {
+            playSoundEffect('click');
+            state.currentIndex = 0;
+            // Restore Spelling Card inner markup if finished
+            location.reload();
+        }
+
+        function renderSandboxGrid() {
+            const grid = document.getElementById('sandbox-word-grid');
+            grid.innerHTML = '';
+
+            SPELLING_WORDS.forEach(item => {
+                const badge = document.createElement('div');
+                badge.id = `sandbox-badge-${item.word}`;
+                badge.className = "bg-slate-100 border-2 border-slate-300 rounded-xl p-2.5 flex items-center justify-between transition-all duration-300";
+                badge.innerHTML = `
+                    <div class="flex items-center gap-2 overflow-hidden">
+                        <div id="sandbox-light-${item.word}" class="light-indicator light-off flex-shrink-0" style="width:16px; height:16px;"></div>
+                        <span class="heading-font font-bold text-xs md:text-sm text-slate-700 capitalize truncate">${item.word}</span>
+                    </div>
+                    <button onclick="speakText('${item.word}')" class="text-slate-400 hover:text-indigo-600 text-xs p-1">
+                        <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                `;
+                grid.appendChild(badge);
+            });
+        }
+
+        function analyzeSandboxText() {
+            const text = document.getElementById('sandbox-textarea').value.toLowerCase();
+            // Split into clean words array
+            const tokens = text.match(/\b[a-z]+\b/g) || [];
+
+            document.getElementById('sandbox-word-count').textContent = `Words typed: ${tokens.length}`;
+
+            SPELLING_WORDS.forEach(item => {
+                const word = item.word;
+                const light = document.getElementById(`sandbox-light-${word}`);
+                const badge = document.getElementById(`sandbox-badge-${word}`);
+
+                if (!light || !badge) return;
+
+                if (tokens.includes(word)) {
+                    // Spelled Correctly in text -> GREEN LIGHT
+                    light.className = "light-indicator light-green-on";
+                    badge.className = "bg-emerald-50 border-2 border-emerald-400 rounded-xl p-2.5 flex items-center justify-between shadow-sm transition-all duration-300";
+                } else {
+                    // Check if student mistyped a close variation
+                    const closeMistype = tokens.find(t => {
+                        return t.length >= 3 && levenshteinDistance(t, word) === 1;
+                    });
+
+                    if (closeMistype) {
+                        // Near miss / misspelled attempt -> RED LIGHT
+                        light.className = "light-indicator light-red-on";
+                        badge.className = "bg-rose-50 border-2 border-rose-400 rounded-xl p-2.5 flex items-center justify-between shadow-sm transition-all duration-300";
+                    } else {
+                        // Neutral / not typed
+                        light.className = "light-indicator light-off";
+                        badge.className = "bg-slate-100 border-2 border-slate-300 rounded-xl p-2.5 flex items-center justify-between transition-all duration-300";
+                    }
+                }
+            });
+        }
+
+        function insertSampleText(sample) {
+            playSoundEffect('click');
+            const area = document.getElementById('sandbox-textarea');
+            area.value = sample;
+            analyzeSandboxText();
+            speakText("Sample text inserted!");
+        }
+
+        function clearSandboxText() {
+            playSoundEffect('click');
+            document.getElementById('sandbox-textarea').value = '';
+            analyzeSandboxText();
+        }
+
+        // Simple Levenshtein distance for near-miss spell check
+        function levenshteinDistance(a, b) {
+            if (a.length === 0) return b.length;
+            if (b.length === 0) return a.length;
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+            for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        function renderFlashcards(filter = "") {
+            const grid = document.getElementById('flashcards-grid');
+            grid.innerHTML = '';
+
+            const filtered = SPELLING_WORDS.filter(w => w.word.toLowerCase().includes(filter.toLowerCase()));
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl p-5 border-2 border-purple-100 shadow-md hover:shadow-lg transition flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="heading-font text-2xl font-bold text-purple-900 capitalize tracking-wide">${item.word}</h3>
+                            <span class="text-xs font-bold text-purple-600 bg-purple-100 px-2.5 py-1 rounded-full">${item.category}</span>
+                        </div>
+                        <p class="heading-font text-sm font-semibold text-purple-600 tracking-wider mb-2">
+                            Syllables: <span class="bg-purple-50 px-2 py-0.5 rounded border border-purple-200">${item.syllables}</span>
+                        </p>
+                        <p class="text-sm text-gray-700 font-medium mb-2">${item.definition}</p>
+                        <p class="text-xs text-gray-500 italic bg-slate-50 p-2 rounded-xl border border-slate-200">"${item.sentence}"</p>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-purple-100 flex items-center justify-between">
+                        <div class="flex gap-2">
+                            <button onclick="speakText('${item.word}')" class="bg-purple-500 hover:bg-purple-600 text-white font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 transition">
+                                <i class="fa-solid fa-volume-high"></i> Normal
+                            </button>
+                            <button onclick="speakText('${item.word}', true)" class="bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 transition">
+                                <i class="fa-solid fa-turtle"></i> Slow
+                            </button>
+                        </div>
+                        <button onclick="practiceSpecificWord('${item.word}')" class="text-xs font-bold text-teal-600 hover:text-teal-800 flex items-center gap-1">
+                            Practice <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterFlashcards() {
+            const query = document.getElementById('card-search-input').value;
+            renderFlashcards(query);
+        }
+
+        function practiceSpecificWord(word) {
+            const idx = SPELLING_WORDS.findIndex(w => w.word === word);
+            if (idx !== -1) {
+                state.currentIndex = idx;
+                switchMode('challenge');
+                loadChallengeQuestion();
+            }
+        }
+
+        function toggleSound() {
+            state.soundEnabled = !state.soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            if (state.soundEnabled) {
+                icon.className = "fa-solid fa-volume-high text-teal-600";
+                playSoundEffect('click');
+                speakText("Sound turned on");
+            } else {
+                icon.className = "fa-solid fa-volume-xmark text-gray-400";
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            }
+        }
+
+        function toggleSpeechSpeed() {
+            playSoundEffect('click');
+            if (state.speechRate === 0.85) {
+                state.speechRate = 0.65;
+                document.getElementById('speed-text').textContent = "Slow Voice 🐢";
+                speakText("Slow voice mode activated");
+            } else {
+                state.speechRate = 0.85;
+                document.getElementById('speed-text').textContent = "Normal Voice 🗣️";
+                speakText("Normal voice mode activated");
+            }
+        }
+
+        function triggerConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#10B981', '#F59E0B', '#3B82F6', '#EC4899', '#8B5CF6'];
+
+            for (let i = 0; i < 70; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 14,
+                    vy: (Math.random() - 0.7) * 14,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rotation: Math.random() * 360,
+                    life: 100
+                });
+            }
+
+            function animateConfetti() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let alive = false;
+
+                particles.forEach(p => {
+                    if (p.life > 0) {
+                        alive = true;
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += 0.3; // gravity
+                        p.life -= 1.5;
+
+                        ctx.save();
+                        ctx.translate(p.x, p.y);
+                        ctx.rotate((p.rotation * Math.PI) / 180);
+                        ctx.fillStyle = p.color;
+                        ctx.globalAlpha = p.life / 100;
+                        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                        ctx.restore();
+                    }
+                });
+
+                if (alive) {
+                    requestAnimationFrame(animateConfetti);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+
+            animateConfetti();
+        }
+
+        window.onload = function() {
+            loadChallengeQuestion();
+
+            // Enable Web Audio context on first click anywhere
+            document.body.addEventListener('click', function initAudioOnUserInteraction() {
+                getAudioContext();
+                document.body.removeEventListener('click', initAudioOnUserInteraction);
+            }, { once: true });
+        };
+    </script>
+</body>
+</html>
